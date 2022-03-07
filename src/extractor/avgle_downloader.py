@@ -36,7 +36,7 @@ class Downloader_avgle(Downloader):
 @try_n(2)
 def get_video(url, cw=None):
     print_ = get_print(cw)
-    
+
     check_alive(cw)
 
     data = cw.data_
@@ -61,10 +61,8 @@ def get_video(url, cw=None):
 
     url_thumb = soup.find('meta', {'property': 'og:image'}).attrs['content']
     title = soup.find('meta', {'property': 'og:title'}).attrs['content'].strip()
-    
-    video = Video(stream, url_thumb, url, title)
 
-    return video
+    return Video(stream, url_thumb, url, title)
 
 
 class Video(object):

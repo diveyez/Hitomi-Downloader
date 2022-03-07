@@ -103,8 +103,7 @@ def get_j(script):
 
     try:
         s = s.replace('window._sharedData', '').strip()[1:-1].strip()
-        j = json.loads(s)
-        return j
+        return json.loads(s)
     except ValueError as e:
         pass
 
@@ -120,9 +119,8 @@ def check_error(soup, cw, wait):
 
     if len(soup.html) < 1000: #4014
         raise errors.LoginRequired(soup.html)
-    
-    err = soup.find('div', class_='error-container')
-    if err:
+
+    if err := soup.find('div', class_='error-container'):
         err = err.text.strip()
         if wait:
             print_('err: {}'.format(err))
@@ -168,9 +166,7 @@ def get_sd(url, session=None, html=None, cw=None, wait=True):
             except:
                 j['entry_data']['ProfilePage'][0].update(j_add) #2900
 
-    # Challenge
-    challenge = j['entry_data'].get('Challenge')
-    if challenge:
+    if challenge := j['entry_data'].get('Challenge'):
         try:
             for cont in challenge[0]['extraData']['content']:
                 title = cont.get('title')
@@ -186,31 +182,35 @@ def get_sd(url, session=None, html=None, cw=None, wait=True):
     login = j['entry_data'].get('LoginAndSignupPage')
     if login:
         raise errors.LoginRequired()
-    
+
     return j
 
 
 def get_id(url):
     j = get_sd(url)
     if '/p/' in url:
-        id = j['entry_data']['PostPage'][0]['graphql']['shortcode_media']['owner']['id']
+        return j['entry_data']['PostPage'][0]['graphql']['shortcode_media'][
+            'owner'
+        ]['id']
+
     elif '/stories/' in url:
-        id = j['entry_data']['StoriesPage'][0]['user']['username'] # ???
+        return j['entry_data']['StoriesPage'][0]['user']['username']
     else:
-        id = j['entry_data']['ProfilePage'][0]['graphql']['user']['id']
-    return id
+        return j['entry_data']['ProfilePage'][0]['graphql']['user']['id']
 
 
 
 def get_username(url):
     j = get_sd(url, wait=False)
     if '/p/' in url:
-        id = j['entry_data']['PostPage'][0]['graphql']['shortcode_media']['owner']['username']
+        return j['entry_data']['PostPage'][0]['graphql']['shortcode_media'][
+            'owner'
+        ]['username']
+
     elif '/stories/' in url:
-        id = j['entry_data']['StoriesPage'][0]['user']['username']
+        return j['entry_data']['StoriesPage'][0]['user']['username']
     else:
-        id = j['entry_data']['ProfilePage'][0]['graphql']['user']['username']
-    return id
+        return j['entry_data']['ProfilePage'][0]['graphql']['user']['username']
 
 
 def get_name(url):
@@ -316,7 +316,7 @@ def get_imgs(url, n_max=2000, title=None, cw=None, session=None):
             break
         except Exception as e:
             e_ = e
-            print_(print_error(e)[0])
+            print_(print_error(e_)[0])
     else:
         raise e_
     n = int(m.groups()[0])
@@ -350,11 +350,10 @@ def get_imgs(url, n_max=2000, title=None, cw=None, session=None):
         except Exception as e:
             if bad > 10:
                 raise Exception('no media')
-            else:
-                print_(u'no media.. retry... ({}) {}'.format(bad+1, print_error(e)[0]))
-                sleep(12*bad, cw)
-                bad += 1
-                continue
+            print_(u'no media.. retry... ({}) {}'.format(bad+1, print_error(e)[0]))
+            sleep(12*bad, cw)
+            bad += 1
+            continue
         bad = 0
 
         edges_new = media.get('edges')
@@ -397,8 +396,7 @@ def get_imgs(url, n_max=2000, title=None, cw=None, session=None):
 ##            single = True
 ##        else:
 ##            single = False
-        for img in Node(url, session=session, cw=cw, media=node).imgs:
-            imgs.append(img)
+        imgs.extend(iter(Node(url, session=session, cw=cw, media=node).imgs))
         if len(imgs) >= n_max:
             break
 
@@ -415,19 +413,15 @@ class Node(object):
         self.session = session
 
         if not media:
-            if False: # Original
-                j = get_sd(url, self.session, cw=cw)
-                data = j['entry_data']['PostPage'][0]['graphql']
-            else:
-                variables = {
-                    "shortcode"            : self.id,
-                    "child_comment_count"  : 3,
-                    "fetch_comment_count"  : 40,
-                    "parent_comment_count" : 24,
-                    "has_threaded_comments": True,
-                    }
-                j = get_query('a9441f24ac73000fa17fe6e6da11d59d', variables, session, cw)
-                data = j['data']
+            variables = {
+                "shortcode"            : self.id,
+                "child_comment_count"  : 3,
+                "fetch_comment_count"  : 40,
+                "parent_comment_count" : 24,
+                "has_threaded_comments": True,
+                }
+            j = get_query('a9441f24ac73000fa17fe6e6da11d59d', variables, session, cw)
+            data = j['data']
             media = data['shortcode_media']
 
         if 'video_url' in media:
@@ -459,10 +453,7 @@ class Node(object):
 def get_imgs_all(url, title=None, cw=None, d=None, session=None, stories=True):
     max_pid = get_max_range(cw)
     url = clean_url(url)
-    if stories:
-        imgs_str = get_stories(url, title, cw=cw, session=session)
-    else:
-        imgs_str = []
+    imgs_str = get_stories(url, title, cw=cw, session=session) if stories else []
     max_pid = max(0, max_pid - len(imgs_str))
     imgs = get_imgs(url, max_pid, title=title, cw=cw, session=session)
 

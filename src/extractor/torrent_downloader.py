@@ -133,9 +133,7 @@ class Downloader_torrent(Downloader):
         if self.status == 'stop':
             self.stop()
             return True
-        if cw.paused:
-            pass
-        else:
+        if not cw.paused:
             cw.dir = self.dir
             cw.urls[:] = self.urls
             cw.clearPieces()
@@ -175,77 +173,75 @@ class Downloader_torrent(Downloader):
     def _callback(self, h, s, alerts):
         self._h = h
         cw = self.cw
-            
+
         if self._state != s.state_str:
             self._state = s.state_str
             self.print_('state: {}'.format(s.state_str))
-
 ##        for alert in alerts:
 ##            self.print_('⚠️ {}'.format(alert))
 
         title = (self._dn or self.url) if self._info is None else self.name
 
-        if cw.alive and cw.valid and not cw.pause_lock:
-            if self._info is not None:
-                if not cw.imgs: #???
-                    self.print_('???')
-                    self.update_files()
-            
-                sizes = torrent.get_file_progress(h, self._info)
-                for i, (file, size) in enumerate(zip(cw.names, sizes)):
-                    file = os.path.realpath(file.replace('\\\\?\\', ''))
-                    if file in cw.dones:
-                        continue
-                    if size[0] == size[1]:
-                        cw.dones.add(file)
-                        file = constants.compact(file).replace('\\', '/')
-                        files = file.split('/')
-                        file = ' / '.join(files[1:])
-                        msg = 'Completed: {}'.format(file)
-                        self.print_(msg)
-                        if i == 0:
-                            self._updateIcon()
-
-                cw.setPieces(torrent.pieces(h, self._info))
-
-            filesize = s.total_done
-            upload = s.total_upload
-            if s.state_str in ('downloading', ):
-                # init filesize
-                if not self._filesize_init:
-                    self._filesize_prev = filesize
-                    self._filesize_init = True
-                    self.print_('init filesize: {}'.format(fs.size(filesize)))
-                    
-                # download
-                d_size = filesize - self._filesize_prev
-                self._filesize_prev = filesize
-                self.size += d_size
-                downloader.total_download_size_torrent += d_size
-                # upload
-                d_size = upload - self._upload_prev
-                self._upload_prev = upload
-                self.size_upload += d_size
-                downloader.total_upload_size_torrent += d_size
-            if self._info is not None:
-                cw.pbar.setValue(s.progress * self._info.total_size())
-            if s.state_str == 'queued':
-                title_ = 'Waiting... {}'.format(title)
-            elif s.state_str == 'checking files':
-                title_ = 'Checking files... {}'.format(title)
-                self._filesize_prev = filesize
-            elif s.state_str == 'downloading':
-                title_ = '{}    (s: {}, p: {}, a:{:.3f})'.format(title, s.num_seeds, s.num_peers, s.distributed_copies)
-                cw.setFileSize(filesize)
-                cw.setSpeed(self.size.speed)
-                cw.setUploadSpeed(self.size_upload.speed)
-            elif s.state_str == 'seeding':
-                title_ = '{}'.format(title)
-                cw.setFileSize(filesize)
-            elif s.state_str == 'reading':
-                title_ = 'Reading... {}'.format(title)
-            else:
-                title_ = '{}... {}'.format(s.state_str.capitalize(), title)
-            cw.setTitle(title_, update_filter=False)
-        else:
+        if not cw.alive or not cw.valid or cw.pause_lock:
             return 'abort'
+        if self._info is not None:
+            if not cw.imgs: #???
+                self.print_('???')
+                self.update_files()
+
+            sizes = torrent.get_file_progress(h, self._info)
+            for i, (file, size) in enumerate(zip(cw.names, sizes)):
+                file = os.path.realpath(file.replace('\\\\?\\', ''))
+                if file in cw.dones:
+                    continue
+                if size[0] == size[1]:
+                    cw.dones.add(file)
+                    file = constants.compact(file).replace('\\', '/')
+                    files = file.split('/')
+                    file = ' / '.join(files[1:])
+                    msg = 'Completed: {}'.format(file)
+                    self.print_(msg)
+                    if i == 0:
+                        self._updateIcon()
+
+            cw.setPieces(torrent.pieces(h, self._info))
+
+        filesize = s.total_done
+        upload = s.total_upload
+        if s.state_str in ('downloading', ):
+            # init filesize
+            if not self._filesize_init:
+                self._filesize_prev = filesize
+                self._filesize_init = True
+                self.print_('init filesize: {}'.format(fs.size(filesize)))
+
+            # download
+            d_size = filesize - self._filesize_prev
+            self._filesize_prev = filesize
+            self.size += d_size
+            downloader.total_download_size_torrent += d_size
+            # upload
+            d_size = upload - self._upload_prev
+            self._upload_prev = upload
+            self.size_upload += d_size
+            downloader.total_upload_size_torrent += d_size
+        if self._info is not None:
+            cw.pbar.setValue(s.progress * self._info.total_size())
+        if s.state_str == 'queued':
+            title_ = 'Waiting... {}'.format(title)
+        elif s.state_str == 'checking files':
+            title_ = 'Checking files... {}'.format(title)
+            self._filesize_prev = filesize
+        elif s.state_str == 'downloading':
+            title_ = '{}    (s: {}, p: {}, a:{:.3f})'.format(title, s.num_seeds, s.num_peers, s.distributed_copies)
+            cw.setFileSize(filesize)
+            cw.setSpeed(self.size.speed)
+            cw.setUploadSpeed(self.size_upload.speed)
+        elif s.state_str == 'seeding':
+            title_ = '{}'.format(title)
+            cw.setFileSize(filesize)
+        elif s.state_str == 'reading':
+            title_ = 'Reading... {}'.format(title)
+        else:
+            title_ = '{}... {}'.format(s.state_str.capitalize(), title)
+        cw.setTitle(title_, update_filter=False)

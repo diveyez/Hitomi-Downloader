@@ -168,10 +168,10 @@ class Video(object):
                 def remove_quotes(s):
                     if s is None or len(s) < 2:
                         return s
-                    for quote in ('"', "'", ):
-                        if s[0] == quote and s[-1] == quote:
-                            return s[1:-1]
-                    return s
+                    return next(
+                        (s[1:-1] for quote in ('"', "'") if s[0] == quote and s[-1] == quote),
+                        s,
+                    )
 
                 def parse_js_value(inp):
                     inp = re.sub(r'/\*(?:(?!\*/).)*?\*/', '', inp)
@@ -460,11 +460,11 @@ def read_album(url, session=None):
         photo = Photo(id_, img, referer)
         photos.append(photo)
 
-    info = {}
     title = clean_title(soup.find('h1', class_='photoAlbumTitleV2').text)
-    info['title'] = format_filename(title, 'album_{}'.format(id_album))
-    info['photos'] = photos
-    return info
+    return {
+        'title': format_filename(title, 'album_{}'.format(id_album)),
+        'photos': photos,
+    }
 
 
 @try_n(8)
@@ -477,11 +477,7 @@ def read_photo(url, session=None):
     div = soup.find('div', id='thumbSlider')
     href = urljoin(url, div.find('a').attrs['href'])
     info = read_album(href)
-    photos = []
-    for photo in info['photos']:
-        if str(photo.id_) == id_:
-            photos.append(photo)
-
+    photos = [photo for photo in info['photos'] if str(photo.id_) == id_]
     info['photos'] = photos
     info['title'] = '{} - {}'.format(info['title'], photos[0].filename)
     return info
@@ -522,26 +518,24 @@ def get_videos(url, cw=None):
         html = downloader.read_html(url_main, session=session)
         soup = Soup(html)
         soup = fix_soup(soup, url_main, session, cw)
-        for a in soup.findAll('a'):
-            if '/{}/{}/videos/upload'.format(mode, username) in a.attrs.get('href', ''):
-                free = True
-                break
-        else:
-            free = False
+        free = next(
+            (
+                True
+                for a in soup.findAll('a')
+                if '/{}/{}/videos/upload'.format(mode, username)
+                in a.attrs.get('href', '')
+            ),
+            False,
+        )
+
         print_('free: {}'.format(free))
 
     # Range
     max_pid = get_max_range(cw, 500)
-    max_pid = min(max_pid, 2000)#
-
     html = downloader.read_html(url, session=session)
     soup = fix_soup(Soup(html), url, session, cw)
 
-    info = {}
-
-    # get title
-    h1 = soup.find('h1')
-    if h1:
+    if h1 := soup.find('h1'):
         header = 'Playlist'
         title = h1.find(id='watchPlaylist')
     else:
@@ -552,31 +546,33 @@ def get_videos(url, cw=None):
         wrapper = soup.find('div', class_='titleWrapper')
         bio = soup.find('div', class_='withBio')
         title = soup.find('h1', {'itemprop':'name'})
-        if not title and profile:
-            title = profile.a
-        if not title and wrapper:
-            title = wrapper.h1
-        if not title and bio:
-            title = bio.h1
+    if not title and profile:
+        title = profile.a
+    if not title and wrapper:
+        title = wrapper.h1
+    if not title and bio:
+        title = bio.h1
     if not title:
         raise Exception('No title')
-    #print(title)
-    info['title'] = '[{}] {}'.format(header, title.text.strip())
+    info = {'title': '[{}] {}'.format(header, title.text.strip())}
     token = re.find('''token *= *['"](.*?)['"]''', html)
     print_('token: {}'.format(token))
 
     # get links
     hrefs = []
     fail = 0
+    max_pid = min(max_pid, 2000)
     for p in range(1, 1+100):
         try:
-            if mode in ['users', 'model']:
-                if mode == 'users':
-                    url_api = 'https://{}/users/{}/videos/public/'\
-                              'ajax?o=mr&page={}'.format(domain, username, p)
-                elif mode == 'model':
-                    url_api = 'https://{}/model/{}/videos/upload/'\
-                              'ajax?o=mr&page={}'.format(domain, username, p)
+            if mode == 'users':
+                r = session.post(url_api)
+                soup = Soup(r.text)
+                if soup.find('h1'):
+                    print('break: h1')
+                    break
+            elif mode == 'model':
+                url_api = 'https://{}/model/{}/videos/upload/'\
+                          'ajax?o=mr&page={}'.format(domain, username, p)
                 r = session.post(url_api)
                 soup = Soup(r.text)
                 if soup.find('h1'):

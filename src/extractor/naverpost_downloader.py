@@ -62,12 +62,11 @@ class DownloaderNaverPost(Downloader):
         return Client(self.parsed_url, self.soup)
 
     def read(self):
-        if self.client.single:
-            self.title = self.client.title
-            posts = self.client.posts
-        else:
+        if not self.client.single:
             raise NotImplementedError
 
+        self.title = self.client.title
+        posts = self.client.posts
         for img_link in img_src_generator(posts):
             self.urls.append(img_link)
 
@@ -106,11 +105,12 @@ def get_img_data_linkdatas(soup: Any) -> Iterator[str]:
 def img_src_generator(linkdatas: Iterator[str]) -> Iterator[str]:
     for linkdata in linkdatas:
         data = json.loads(linkdata)
-        if data.get("linkUse") is None:
-            yield data["src"]  # 제네레이터
-        else:
-            if not strtobool(data["linkUse"]):
-                yield data["src"]
+        if (
+            data.get("linkUse") is not None
+            and not strtobool(data["linkUse"])
+            or data.get("linkUse") is None
+        ):
+            yield data["src"]
 
 
 # https://stackoverflow.com/a/24519338 참고
@@ -189,15 +189,13 @@ class UrlGenerator:
         query = parse_qs(self.parsed_url.query)
         for i in range(self.count):
             new_url_query = f"?memberNo={query['memberNo'][0]}&fromNo={i + 1}"
-            url = f"https://{self.parsed_url.netloc}/async{self.parsed_url.path}{new_url_query}"
-            yield url
+            yield f"https://{self.parsed_url.netloc}/async{self.parsed_url.path}{new_url_query}"
 
     def all_series_url_generator(self) -> Iterator[str]:
         query = parse_qs(self.parsed_url.query)
         for i in range(self.count):
             new_url_query = f"?memberNo={query['memberNo'][0]}&seriesNo={query['seriesNo'][0]}&fromNo={i + 1}"
-            url = f"https://{self.parsed_url.netloc}/my/series/detail/more.nhn{new_url_query}"
-            yield url
+            yield f"https://{self.parsed_url.netloc}/my/series/detail/more.nhn{new_url_query}"
 
 
 # 여기서 페이지 리스트 만듬

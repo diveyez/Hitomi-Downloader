@@ -45,8 +45,7 @@ class Downloader_wikiart(Downloader):
 
 
 def get_id(url):
-    userid = url.split('?')[0].split('#')[0].split('wikiart.org/')[1].split('/')[1]
-    return userid
+    return url.split('?')[0].split('#')[0].split('wikiart.org/')[1].split('/')[1]
 
 
 def get_imgs(url, artist, cw=None):

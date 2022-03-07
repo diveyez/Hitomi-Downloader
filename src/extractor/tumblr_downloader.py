@@ -89,8 +89,7 @@ class TumblrAPI(object):
         url = update_url_query(url, qs)
         r = self.session.get(url, headers=self._hdr)
         data = r.json()
-        errs = data.get('errors', [])
-        if errs:
+        if errs := data.get('errors', []):
             code = int(errs[0]['code'])
             if code == 0:
                 raise Exception('Not found')

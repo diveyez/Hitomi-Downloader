@@ -58,11 +58,10 @@ class Downloader_twitter(Downloader):
 
     @classmethod
     def fix_url(cls, url):
-        username = re.find(r'twitter.com/([^/]+)/media', url)
-        if username:
+        if username := re.find(r'twitter.com/([^/]+)/media', url):
             url = username
         if 'twitter.com/' in url and not re.find('^https?://', url): #3165; legacy
-            url = 'https://' + url
+            url = f'https://{url}'
         if not re.find('^https?://', url):
             url = 'https://twitter.com/{}'.format(url.lstrip('@'))
         return url.split('?')[0].split('#')[0].strip('/')
@@ -104,9 +103,12 @@ def _guest_token(session, headers, cache=True, cw=None):
     global CACHE_GUEST_TOKEN
     print_ = get_print(cw)
     token = None
-    if cache:
-        if CACHE_GUEST_TOKEN and time() - CACHE_GUEST_TOKEN[1] < TIMEOUT_GUEST_TOKEN:
-            token = CACHE_GUEST_TOKEN[0]
+    if (
+        cache
+        and CACHE_GUEST_TOKEN
+        and time() - CACHE_GUEST_TOKEN[1] < TIMEOUT_GUEST_TOKEN
+    ):
+        token = CACHE_GUEST_TOKEN[0]
     if token is None:
         print('!!! get guest_token')
         name = 'x-guest-token'
@@ -134,8 +136,7 @@ class TwitterAPI(object):
             }
         session.headers.update(hdr)
 
-        auth_token = session.cookies.get("auth_token", domain=".twitter.com")
-        if auth_token:
+        if auth_token := session.cookies.get("auth_token", domain=".twitter.com"):
             session.headers["x-twitter-auth-type"] = "OAuth2Session"
             print('auth_token:', auth_token)
         else:
@@ -182,11 +183,9 @@ class TwitterAPI(object):
             url_api = update_url_query(url_api, params)
         #print('call:', url_api)
         r = self.session.get(url_api, headers={'Referer': referer})
-        csrf = r.cookies.get('ct0')
-        if csrf:
+        if csrf := r.cookies.get('ct0'):
             self.session.headers['x-csrf-token'] = csrf
-        data = json.loads(r.text)
-        return data
+        return json.loads(r.text)
 
 ##    @sleep_and_retry
 ##    @limits(1, 36)
@@ -307,7 +306,7 @@ def get_imgs(username, session, title, types, n=0, format='[%y-%m-%d] id_ppage',
 
     # 2303
     ids = set()
-    names = dict()
+    names = {}
     dir_ = os.path.join(get_outdir('twitter'), title)
     if os.path.isdir(dir_) and cw:
         for name in cw.names_old:
@@ -315,10 +314,7 @@ def get_imgs(username, session, title, types, n=0, format='[%y-%m-%d] id_ppage',
             id_ = re.find('([0-9]+)_p', name)
             if id_ is None:
                 continue
-            if get_ext(name).lower() == '.mp4':
-                type_ = 'video'
-            else:
-                type_ = 'img'
+            type_ = 'video' if get_ext(name).lower() == '.mp4' else 'img'
             if type_ not in types:
                 continue
             id_ = int(id_)
@@ -395,7 +391,7 @@ def get_imgs_more(username, session, title, types, n=None, format='[%y-%m-%d] id
     # Range
     n = max(n or 0, get_max_range(cw))
 
-    ids_set = set(img.id for img in imgs)
+    ids_set = {img.id for img in imgs}
 
     count_no_tweets = 0
     count_no_imgs = 0
@@ -426,8 +422,9 @@ def get_imgs_more(username, session, title, types, n=None, format='[%y-%m-%d] id
         if tweets:
             exists_more_imgs = False
             for tweet in tweets:
-                imgs_tweet = get_imgs_from_tweet(tweet, session, types, format, cw)
-                if imgs_tweet:
+                if imgs_tweet := get_imgs_from_tweet(
+                    tweet, session, types, format, cw
+                ):
                     imgs += imgs_tweet
                     exists_more_imgs = True
             if exists_more_imgs:
@@ -550,8 +547,7 @@ class Url_alter(object):
             urls.append(':'.join(url.split(':')[:-1]))
         base, _, fmt = url.rpartition('.')
         base += '?format=' + fmt.split(':')[0] + '&name='
-        for name in ['orig', 'large']:
-            urls.append(base + name)
+        urls.extend(base + name for name in ['orig', 'large'])
         self.urls = urls
 
     def __call__(self):
@@ -569,10 +565,7 @@ class Image(object):
         self.time = time
         self.p = p
         self.n_thread = n_thread
-        if isVideo:
-            url_alter = self.get #4185
-        else:
-            url_alter = Url_alter(url)
+        url_alter = self.get if isVideo else Url_alter(url)
         if isVideo and get_ext(url).lower() not in ['.mp4', '.m3u8']:
             get = self.get
         else:
@@ -638,15 +631,13 @@ class Image(object):
 def get_artist_username(url, session, cw=None):
     if 'twitter.' not in url:
         username = url.strip('@')
+    elif id := re.find('/status/([0-9]+)', url):
+        tweet = TwitterAPI(session, cw).tweet(id, url)
+        user_id = tweet['globalObjects']['tweets'][id]['user_id_str']
+        username = tweet['globalObjects']['users'][user_id]['screen_name']
+        print('username fixed:', username)
     else:
-        id = re.find('/status/([0-9]+)', url)
-        if id:
-            tweet = TwitterAPI(session, cw).tweet(id, url)
-            user_id = tweet['globalObjects']['tweets'][id]['user_id_str']
-            username = tweet['globalObjects']['users'][user_id]['screen_name']
-            print('username fixed:', username)
-        else:
-            username = re.find('twitter.[^/]+/([^/?]+)', url)
+        username = re.find('twitter.[^/]+/([^/?]+)', url)
     if not username:
         raise Exception('no username')
     data = TwitterAPI(session, cw).user_by_screen_name(username)

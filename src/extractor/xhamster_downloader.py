@@ -32,7 +32,7 @@ class Downloader_xhamster(Downloader):
 
     @classmethod
     def key_id(cls, url):
-        return re.sub(cls.__name+r'\.[^/]+', 'domain', url, 1)
+        return re.sub(f'{cls.__name}\\.[^/]+', 'domain', url, 1)
 
     def read(self):
         cw = self.cw
@@ -96,20 +96,20 @@ def get_data(html):
 
 
 def get_info(url):
-    info = {}
     html = downloader.read_html(url)
     soup = Soup(html)
 
-    err = soup.find('div', class_="error404-title")
-    if err:
+    if err := soup.find('div', class_="error404-title"):
         raise Exception(err.text.strip())
 
     data = get_data(html)
-    
-    info['title'] = data['videoModel']['title']
-    info['id'] = data['videoModel']['id']
-    info['thumbnail'] = data['videoModel']['thumbURL']
-    
+
+    info = {
+        'title': data['videoModel']['title'],
+        'id': data['videoModel']['id'],
+        'thumbnail': data['videoModel']['thumbURL'],
+    }
+
     fs = []
     for res, url_video in data['videoModel']['sources']['mp4'].items():
         height = int(re.find('(\d+)p', res))
@@ -135,7 +135,7 @@ def read_page(username, p, cw):
             break
         except Exception as e:
             e_ = e
-            print(e)
+            print(e_)
     else:
         raise e_
     return items
@@ -145,11 +145,9 @@ def read_channel(url, cw=None):
     print_ =  get_print(cw)
     username = url.split('/users/')[1].split('/')[0]
 
-    info = {}
     soup = downloader.read_soup(url)
     title = soup.find('div', class_='user-name').text.strip()
-    info['title'] = '[Channel] {}'.format(title)
-    
+    info = {'title': '[Channel] {}'.format(title)}
     urls = []
     urls_set = set()
     for p in range(1, 101):
@@ -203,15 +201,13 @@ def setPage(url, p):
 def read_gallery(url, cw=None):
     print_ = get_print(cw)
 
-    info = {}
-
     soup = downloader.read_soup(url)
 
     h1 = soup.find('h1')
     if h1.find('a'):
         url = h1.find('a')['href']
         return read_gallery(url, cw)
-    info['title'] = h1.text.strip()
+    info = {'title': h1.text.strip()}
     info['url'] = setPage(url, 1)
 
     imgs = []
@@ -220,14 +216,14 @@ def read_gallery(url, cw=None):
         print_('p: {}'.format(p))
         url = setPage(url, p)
         html = downloader.read_html(url)
-        
+
         data = get_data(html)
 
         photos = data['photosGalleryModel']['photos']
         if not photos:
             print('no photos')
             break
-        
+
         for photo in photos:
             img = photo['imageURL']
             id = photo['id']
@@ -238,7 +234,7 @@ def read_gallery(url, cw=None):
             ids.add(id)
             img = Image(img, id, referer)
             imgs.append(img)
-    
+
     info['imgs'] = imgs
 
     return info

@@ -58,7 +58,7 @@ class Downloader_luscious(Downloader):
             raise
         soup = Soup(html)
         title = clean_title(get_title(soup))
-        
+
         self.title = tr_(u'읽는 중... {}').format(title)
 
         if '/videos/' in url:
@@ -78,10 +78,7 @@ class Downloader_luscious(Downloader):
             pass
 
         for img in imgs:
-            if img.id in names:
-                url = os.path.join(dir, names[img.id])
-            else:
-                url = img.url
+            url = os.path.join(dir, names[img.id]) if img.id in names else img.url
             self.urls.append(url)
 
         self.title = title#
@@ -117,7 +114,7 @@ def get_imgs(url, soup=None, cw=None):
 
 @try_n(4, sleep=30)
 def get_imgs_p(url, p=1):
-    id = re.find('/albums/[^/]+?([0-9]+)/', url+'/')
+    id = re.find('/albums/[^/]+?([0-9]+)/', f'{url}/')
     print(url, id)
     url_api = 'https://api.luscious.net/graphql/nobatch/?operationName=AlbumListOwnPictures&query=+query+AlbumListOwnPictures%28%24input%3A+PictureListInput%21%29+%7B+picture+%7B+list%28input%3A+%24input%29+%7B+info+%7B+...FacetCollectionInfo+%7D+items+%7B+...PictureStandardWithoutAlbum+%7D+%7D+%7D+%7D+fragment+FacetCollectionInfo+on+FacetCollectionInfo+%7B+page+has_next_page+has_previous_page+total_items+total_pages+items_per_page+url_complete+%7D+fragment+PictureStandardWithoutAlbum+on+Picture+%7B+__typename+id+title+created+like_status+number_of_comments+number_of_favorites+status+width+height+resolution+aspect_ratio+url_to_original+url_to_video+is_animated+position+tags+%7B+category+text+url+%7D+permissions+url+thumbnails+%7B+width+height+size+url+%7D+%7D+&variables=%7B%22input%22%3A%7B%22filters%22%3A%5B%7B%22name%22%3A%22album_id%22%2C%22value%22%3A%22{}%22%7D%5D%2C%22display%22%3A%22position%22%2C%22page%22%3A{}%7D%7D'.format(id, p)
     data_raw = downloader.read_html(url_api, referer=url)

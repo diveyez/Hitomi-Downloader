@@ -129,19 +129,16 @@ def get_imgs(url, title=None, cw=None):
 
     # 2566
     user_id = Session().cookies.get('user_id', domain='gelbooru.com')
-    if user_id:
-        cookies = None
-    else:
-        cookies = {'fringeBenefits': 'yup'}
+    cookies = None if user_id else {'fringeBenefits': 'yup'}
     print_('user_id: {}'.format(user_id))
-    
+
     # Range
     max_pid = get_max_range(cw)
 
     imgs = []
     ids = set()
     count_no_imgs = 0
-    for p in range(500): #1017
+    for _ in range(500):
         url = setPage(url, len(ids))
         print_(url)
         html = downloader.read_html(url, cookies=cookies)
@@ -167,7 +164,7 @@ def get_imgs(url, title=None, cw=None):
             if count_no_imgs > 1:
                 print('break')
                 break
-            
+
         if len(imgs) >= max_pid:
             break
 
@@ -175,5 +172,5 @@ def get_imgs(url, title=None, cw=None):
             if not cw.alive:
                 break
             cw.setTitle(u'{}  {} - {}'.format(tr_(u'읽는 중...'), title, len(imgs)))
-            
+
     return imgs[:max_pid]

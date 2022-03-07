@@ -76,7 +76,7 @@ class Downloader_lhscan(Downloader):
                     break
                 except Exception as e:
                     e_ = e
-                    print(e)
+                    print(e_)
             else:
                 raise e_
             self._soup = Soup(html)
@@ -169,8 +169,7 @@ def get_pages(url, session, soup=None, cw=None):
 @try_n(4)
 def f(url):
     soup, session = get_soup_session(url)
-    pages = get_pages(url, session, soup=soup)
-    return pages
+    return get_pages(url, session, soup=soup)
 
 
 @try_n(2)
@@ -186,11 +185,11 @@ def get_imgs(url, title, session, soup=None, cw=None):
     for i, page in enumerate(pages):
         imgs += get_imgs_page(page, url, session, cw)
         s = u'{} {} / {}  ({} / {})'.format(tr_(u'읽는 중...'), title, page.title, i+1, len(pages))
-        if cw is not None:
-            if not cw.alive:
-                return
-            cw.setTitle(s)
-        else:
+        if cw is None:
             print(s)
 
+        elif not cw.alive:
+            return
+        else:
+            cw.setTitle(s)
     return imgs

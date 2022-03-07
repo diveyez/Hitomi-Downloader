@@ -49,19 +49,23 @@ class Video(object):
 
     def get(self, referer):
         ext = downloader.get_ext(self._url, session=self.session, referer=referer)
-        if ext == '.m3u8':
-            video = M3u8_stream(self._url, referer=referer, session=self.session, n_thread=4)
-        else:
-            video = self._url
-        return video
+        return (
+            M3u8_stream(
+                self._url, referer=referer, session=self.session, n_thread=4
+            )
+            if ext == '.m3u8'
+            else self._url
+        )
 
 
 def get_info(url, session, cw=None):
     print_ = get_print(cw)
-    info = {'videos': []}
     html = downloader.read_html(url, session=session)
     soup = Soup(html)
-    info['title'] = soup.find('h2', class_='videoCnt_title').text.strip()
+    info = {
+        'videos': [],
+        'title': soup.find('h2', class_='videoCnt_title').text.strip(),
+    }
 
     id_ = re.find(PATTERN_ID, url, err='no id')
     print_('id: {}'.format(id_))

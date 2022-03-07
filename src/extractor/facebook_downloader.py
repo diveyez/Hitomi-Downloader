@@ -36,8 +36,7 @@ def get_img(url):
     soup = Soup(html)
 
     for div in soup.findAll('div'):
-        href = div.attrs.get('data-full-size-href')
-        if href:
+        if href := div.attrs.get('data-full-size-href'):
             img = href
             break
     else:
@@ -50,7 +49,7 @@ def get_img(url):
             code = code.string
             hidden = Soup(code)
             soup.append(hidden)
-            
+
         for a in soup.findAll('a'):
             target = a.attrs.get('target')
             if target == '_blank':
@@ -90,8 +89,7 @@ class Downloader_facebook(Downloader):
 
     @property
     def username(self):
-        username = get_username(self.url)
-        return username
+        return get_username(self.url)
 
     @property
     def soup(self):
@@ -109,11 +107,11 @@ class Downloader_facebook(Downloader):
 
     @property
     def album(self):
-        if 'album_id=' in self.url:
-            album = re.findall('album_id=([0-9]+)', self.url)[0]
-        else:
-            album = None
-        return album
+        return (
+            re.findall('album_id=([0-9]+)', self.url)[0]
+            if 'album_id=' in self.url
+            else None
+        )
 
     def read(self):
         self.print_(self.name)
@@ -142,8 +140,7 @@ def get_title(soup):
         if gc and gc.find('form', id='login_form'):
             raise errors.LoginRequired()
         raise Exception('no name')
-    title = json.loads(name)
-    return title
+    return json.loads(name)
 
 
 def get_imgs(username, title, cw=None):
@@ -251,10 +248,8 @@ def get_imgs(username, title, cw=None):
 
 def get_username(url):
     if '/profile.php?' in url:
-        id = re.find(r'/profile\.php[\?&]id=([0-9]+)', url)
-        return id
-    else:
-        url = url.replace('facebook.com/pg/', 'facebook.com/')
-        return url.split('?')[0].split('facebook.com/')[1].split('/')[0]
+        return re.find(r'/profile\.php[\?&]id=([0-9]+)', url)
+    url = url.replace('facebook.com/pg/', 'facebook.com/')
+    return url.split('?')[0].split('facebook.com/')[1].split('/')[0]
 
     

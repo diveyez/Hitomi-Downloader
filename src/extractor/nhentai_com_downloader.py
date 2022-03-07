@@ -80,16 +80,16 @@ def get_info(url):
     data_raw = downloader.read_html(url_api, url)
     data_images = json.loads(data_raw)
 
-    info = {}
-    info['url'] = url
-    
-    info['id'] = int(data['id'])
-    info['type'] = data['category']['name']
-    info['title'] = data['title']
-    info['artists'] = [x['name'] for x in data['artists']]
-    info['groups'] = [x['name'] for x in data['groups']]
-    info['seriess'] = [x['name'] for x in data['parodies']]
-    info['lang'] = data['language']['name']
+    info = {
+        'url': url,
+        'id': int(data['id']),
+        'type': data['category']['name'],
+        'title': data['title'],
+        'artists': [x['name'] for x in data['artists']],
+        'groups': [x['name'] for x in data['groups']],
+        'seriess': [x['name'] for x in data['parodies']],
+        'lang': data['language']['name'],
+    }
 
     imgs = []
     for img in data_images['images']:
@@ -97,7 +97,7 @@ def get_info(url):
         img = Image(url, img, len(imgs))
         imgs.append(img)
     info['imgs'] = imgs
-    
+
     return info
 
 

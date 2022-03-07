@@ -30,10 +30,8 @@ class Downloader_artstation(Downloader):
 
     def init(self):
         self.url_main = 'https://www.artstation.com/{}'.format(self.id.replace('artstation_', '', 1).replace('／', '/'))
-        
-        if '/artwork/' in self.url or '/projects/' in self.url:
-            pass#raise NotImplementedError('Single post')
-        else:
+
+        if '/artwork/' not in self.url and '/projects/' not in self.url:
             self.url = self.url_main
         self.print_(self.url)
 
@@ -187,8 +185,7 @@ def get_imgs_page(id_art, session, date=None, cw=None):
             continue
         url = None
         video = None
-        embed = img.get('player_embedded')
-        if embed:
+        if embed := img.get('player_embedded'):
             soup = Soup(embed)
             url_embed = soup.find('iframe').attrs['src']
             print_('embed: {}'.format(url_embed))
@@ -210,11 +207,7 @@ def get_imgs_page(id_art, session, date=None, cw=None):
                     url = None
         if not url:
             url = img['image_url']
-        if video:
-            img = video
-        else:
-            img = Image(post_url, date, url, page)
-            
+        img = video or Image(post_url, date, url, page)
         img.data = data#
         imgs.append(img)
 

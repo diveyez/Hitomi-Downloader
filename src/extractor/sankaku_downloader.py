@@ -227,8 +227,6 @@ def wait(cw):
 
 
 def get_imgs(url, title=None, cw=None, d=None, types=['img', 'gif', 'video'], session=None):
-    if False:#
-        raise NotImplementedError('Not Implemented')
     print_ = get_print(cw)
     print_('types: {}'.format(', '.join(types)))
     if 'chan.sankakucomplex' in url:
@@ -238,15 +236,13 @@ def get_imgs(url, title=None, cw=None, d=None, types=['img', 'gif', 'video'], se
     else:
         raise Exception('Not supported subdomain')
 
-    info = {}
-    info['single'] = False
-
+    info = {'single': False}
     if '/post/show/' in url:
         info['single'] = True
         id = get_id(url)
         info['imgs'] = [Image(type, id, url, None, cw=cw, d=d)]
         return info
-    
+
     # Range
     max_pid = get_max_range(cw)
 
@@ -261,7 +257,7 @@ def get_imgs(url, title=None, cw=None, d=None, types=['img', 'gif', 'video'], se
         for name in names:
             id = os.path.splitext(name)[0]
             local_ids[id] = os.path.join(dir, name)
-        
+
     imgs = []
     page = 1
     url_imgs = set()
@@ -287,10 +283,10 @@ def get_imgs(url, title=None, cw=None, d=None, types=['img', 'gif', 'video'], se
         url_old = url
         soup = Soup(html)
         articles = soup.findAll('span', {'class': 'thumb'})
-        
+
         if not articles:
             break
-            
+
         for article in articles:
             # 1183
             tags = article.find('img', class_='preview').attrs['title'].split()
@@ -302,7 +298,7 @@ def get_imgs(url, title=None, cw=None, d=None, types=['img', 'gif', 'video'], se
                 type_ = 'img'
             if type_ not in types:
                 continue
-            
+
             url_img = article.a.attrs['href']
             if not url_img.startswith('http'):
                 url_img = urljoin('https://{}.sankakucomplex.com'.format(type), url_img)
@@ -310,14 +306,10 @@ def get_imgs(url, title=None, cw=None, d=None, types=['img', 'gif', 'video'], se
             #print_(article)
             if id is None: # sankaku plus
                 continue
-            if id in local_ids:
-                #print('skip', id)
-                local = True
-            else:
-                local = False
             #print(url_img)
             if url_img not in url_imgs:
                 url_imgs.add(url_img)
+                local = id in local_ids
                 if local:
                     url_img = local_ids[id]
                 img = Image(type, id, url_img, url, local=local, cw=cw, d=d)
@@ -337,7 +329,7 @@ def get_imgs(url, title=None, cw=None, d=None, types=['img', 'gif', 'video'], se
             print_(print_error(e)[-1])
             #url = setPage(url, page)
             break
-        
+
         if cw is not None:
             cw.setTitle('{}  {} - {}'.format(tr_('읽는 중...'), title, len(imgs)))
         else:
@@ -347,7 +339,7 @@ def get_imgs(url, title=None, cw=None, d=None, types=['img', 'gif', 'video'], se
         raise Exception('no images')
 
     info['imgs'] = imgs
-    
+
     return info
 
 

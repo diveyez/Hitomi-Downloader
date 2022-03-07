@@ -105,7 +105,7 @@ class Downloader_soundcloud(Downloader):
         album_art = self.ui_setting.albumArt.isChecked()
         info = get_audios(self.url, self.cw, album_art)
         audios = info['audios']
-        
+
         if not audios:
             raise Exception('no audios')
 
@@ -117,7 +117,7 @@ class Downloader_soundcloud(Downloader):
                 break
             except Exception as e:
                 e_ = e
-                print(e)
+                print(e_)
                 audios.remove(audio)
         else:
             raise e_

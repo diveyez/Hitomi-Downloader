@@ -49,12 +49,11 @@ class Downloader_yandere(Downloader):
 
             self.cw.setTitle('{}  {} - {}'.format(tr_('읽는 중...'), title, len(self.urls)))
 
-            next_page = soup.find('a', attrs={'rel':'next'}, href=True)
-            if not next_page:
-                break
-            else:
+            if next_page := soup.find('a', attrs={'rel': 'next'}, href=True):
                 url = urljoin(self.url, next_page['href'])
 
+            else:
+                break
         self.title = title
 
     def get_id(self, url:str) -> str:

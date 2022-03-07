@@ -52,9 +52,7 @@ class Downloader_v2ph(Downloader):
 def get_info(url):
     html = downloader.read_html(url)
     soup = Soup(html)
-    info = {}
-    info['title'] = soup.find('h1').text.strip()
-    return info
+    return {'title': soup.find('h1').text.strip()}
 
 
 def get_imgs(url, title, cw=None):

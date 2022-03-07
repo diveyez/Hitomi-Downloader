@@ -43,14 +43,10 @@ class Video(object):
 @try_n(2)
 def fix_url(url, cw=None):
     print_ = get_print(cw)
-    if '?' in url:
-        tail = url.split('?')[1]
-    else:
-        tail = None
+    tail = url.split('?')[1] if '?' in url else None
     html = downloader.read_html(url, methods={'requests'})
     soup = Soup(html)
-    meta = soup.find('meta', {'itemprop': 'url'})
-    if meta:
+    if meta := soup.find('meta', {'itemprop': 'url'}):
         url_new = meta.attrs['content']
         if tail:
             url_new = '{}?{}'.format(url_new, tail)
@@ -108,7 +104,7 @@ class Downloader_bili(Downloader):
         cw = self.cw
         with cw.convert(self):
             outdir = get_outdir(self.type)
-            out = os.path.join(outdir, self.title + '.mp4')
+            out = os.path.join(outdir, f'{self.title}.mp4')
             ffmpeg.join(cw.names, out, cw)
             for file in cw.names:
                 utils.remove(file)
@@ -125,10 +121,7 @@ def get_page(url):
         page = int(page[0])
     else:
         page = re.findall('_p([0-9]+)', url)
-        if page:
-            page = int(page[0])
-        else:
-            page = None
+        page = int(page[0]) if page else None
     if page == 1:
         page = None
     return page
@@ -157,7 +150,7 @@ def get_resolution_(quality):
 def get_videos(url, cw=None, depth=0):
     print_ = get_print(cw)
     res = get_resolution()
-    
+
     mobj = re.match(_VALID_URL, url)
     video_id = mobj.group('id')
     anime_id = mobj.group('anime_id')
@@ -179,9 +172,9 @@ def get_videos(url, cw=None, depth=0):
     print_('cid: {}'.format(cid))
     headers = {'Referer': url}
     entries = []
-    
+
     RENDITIONS = ['qn={}&quality={}&type='.format(qlt, qlt) for qlt in RESOLS.keys()]# + ['quality=2&type=mp4']
-    
+
     for num, rendition in enumerate(RENDITIONS, start=1):
         print('####', num, rendition)
         payload = 'appkey=%s&cid=%s&otype=json&%s' % (_APP_KEY, cid, rendition)
@@ -196,8 +189,7 @@ def get_videos(url, cw=None, depth=0):
             print('#### error', num)
             if num < len(RENDITIONS):
                 continue
-            msg = video_info.get('message')
-            if msg:
+            if msg := video_info.get('message'):
                 raise Exception(msg)
         quality = video_info['quality']
         resolution = get_resolution_(quality)
@@ -208,7 +200,7 @@ def get_videos(url, cw=None, depth=0):
         if int(re.find('([0-9]+)p', resolution)) > res:
             print_('skip resolution')
             continue
-        
+
         for idx, durl in enumerate(video_info['durl']):
             # 1343
             if idx == 0:
@@ -216,13 +208,17 @@ def get_videos(url, cw=None, depth=0):
                 if size < 1024 * 1024 and depth == 0:
                     print_('size is too small')
                     return get_videos(url, cw, depth+1)
-            
+
             formats = [
              {'url': durl['url'], 
                 'filesize': int_or_none(durl['size'])}]
-            for backup_url in durl.get('backup_url', []):
-                formats.append({'url': backup_url, 
-                   'preference': -2 if 'hd.mp4' in backup_url else -3})
+            formats.extend(
+                {
+                    'url': backup_url,
+                    'preference': -2 if 'hd.mp4' in backup_url else -3,
+                }
+                for backup_url in durl.get('backup_url', [])
+            )
 
             for a_format in formats:
                 a_format.setdefault('http_headers', {}).update({'Referer': url})
@@ -249,6 +245,5 @@ def get_pages(html):
     s = re.find(r'__INITIAL_STATE__=(.+)', html)
     data_raw = cut_pair(s)
     data = json.loads(data_raw)
-    pages = data['videoData']['pages']
-    return pages
+    return data['videoData']['pages']
 

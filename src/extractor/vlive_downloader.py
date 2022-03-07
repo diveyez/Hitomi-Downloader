@@ -35,7 +35,7 @@ def get_video(url, cw=None):
     options = {
         'noplaylist': True,
         }
-    
+
     ydl = ytdl.YoutubeDL(options, cw=cw)
     info = ydl.extract_info(url)
 
@@ -59,9 +59,7 @@ def get_video(url, cw=None):
             if item['ext'] != 'vtt':
                 continue
             subs[sub] = item['url']
-    video = Video(f, info, subs, cw)
-
-    return video
+    return Video(f, info, subs, cw)
 
 
 class Video(object):
@@ -78,7 +76,6 @@ class Video(object):
         ext = get_ext(self.url)
         if ext.lower() == '.m3u8':
             raise NotImplementedError('stream')#
-            url = M3u8_stream(self.url, n_thread=4)
         else:
             url = self.url
         self.url = LazyUrl(self.url, lambda x: url, self, pp=self.pp)

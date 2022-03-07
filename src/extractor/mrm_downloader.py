@@ -56,7 +56,7 @@ class Downloader_mrm(Downloader):
                     break
                 except Exception as e:
                     e_ = e
-                    self.print_(e)
+                    self.print_(e_)
             else:
                 raise e_
             self._soup = Soup(html)
@@ -64,8 +64,7 @@ class Downloader_mrm(Downloader):
 
     @property
     def name(self):
-        title = get_title(self.soup)
-        return title
+        return get_title(self.soup)
 
     def read(self):
         self.title = '읽는 중... {}'.format(self.name)
@@ -206,7 +205,5 @@ def get_session(url, cw=None):
 
     print_('cf protection')
     r = clf2.solve(url, cw=cw)
-    session = r['session']
-
-    return session
+    return r['session']
     

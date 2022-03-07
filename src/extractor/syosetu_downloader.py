@@ -45,12 +45,7 @@ class Downloader_syosetu(Downloader):
 
     @property
     def id_(self):
-        ids = re.findall('.com/([^/]+)', self.url)
-        if ids:
-            id = ids[0]
-        else:
-            id = self.url
-        return id
+        return ids[0] if (ids := re.findall('.com/([^/]+)', self.url)) else self.url
 
     def read(self):
         for try_ in range(8):
@@ -74,8 +69,7 @@ class Downloader_syosetu(Downloader):
         ex = soup.find('div', id='novel_ex')
         self.novel_ex = ex.text.strip() if ex else None
         texts = []
-        subtitles = soup.findAll('dd', class_='subtitle')
-        if subtitles:
+        if subtitles := soup.findAll('dd', class_='subtitle'):
             for subtitle in subtitles:
                 update = subtitle.parent.find('dt', class_='long_update')
                 update2 = None
@@ -144,33 +138,30 @@ def get_title_artist(soup):
 def get_text(url, subtitle, update, session):
     html = downloader.read_html(url, session=session)
     soup = Soup(html)
-    if update:
-        update = u'        ' + update
-    else:
-        update = ''
-        
+    update = f'        {update}' if update else ''
     story = soup.find('div', id='novel_honbun').text.strip()
-        
+
     p = soup.find('div', id='novel_p')
     p = '' if p is None else p.text.strip()
     if p:
         story = '{}\n\n════════════════════════════════\n\n{}'.format(p, story)
-        
+
     #2888
     a = soup.find('div', id='novel_a')
     a = '' if a is None else a.text.strip()
     if a:
         story = '{}\n\n════════════════════════════════\n\n{}'.format(story, a)
-        
-    text =u'''────────────────────────────────
+
+    return u'''────────────────────────────────
 
   ◆  {}{}
 
 ────────────────────────────────
 
 
-{}'''.format(subtitle, update, story)
-    return text
+{}'''.format(
+        subtitle, update, story
+    )
 
 
 def get_session():

@@ -114,7 +114,7 @@ def get_imgs(username, title, session, cw=None):
     #downloader.read_html(url_enter, session=session)
 
     hrefs = []
-    for p in range(100):
+    for _ in range(100):
         print(url)
         html = downloader.read_html(url, session=session)
         soup = Soup(html)

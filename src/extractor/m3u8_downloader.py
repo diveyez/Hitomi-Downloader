@@ -17,7 +17,7 @@ class Downloader_m3u8(Downloader):
     @classmethod
     def fix_url(cls, url):
         if '://' not in url:
-            url = 'http://' + url
+            url = f'http://{url}'
         return url
 
     def read(self):

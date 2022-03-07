@@ -99,7 +99,7 @@ def get_pages(url):
                 break
             except Exception as e:
                 e_ = e
-                print(e)
+                print(e_)
         else:
             raise e_
         pages_new = []
@@ -131,8 +131,7 @@ def get_imgs_all(url, title, cw=None):
     pages = page_selector.filter(pages, cw)
     imgs = []
     for p, page in enumerate(pages):
-        imgs_already = get_imgs_already('webtoon', title, page, cw)
-        if imgs_already:
+        if imgs_already := get_imgs_already('webtoon', title, page, cw):
             imgs += imgs_already
             continue
         imgs += get_imgs(page)

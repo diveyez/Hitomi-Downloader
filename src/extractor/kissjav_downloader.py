@@ -47,10 +47,7 @@ def get_video(url):
 
     url_thumb = soup.find('meta', {'property': 'og:image'}).attrs['content']
 
-    #src_best = downloader.real_url(src_best)
-
-    video = Video(src_best, url_thumb, url, title, id)
-    return video
+    return Video(src_best, url_thumb, url, title, id)
 
 
 class Video(object):

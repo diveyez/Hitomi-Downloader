@@ -20,11 +20,11 @@ class Downloader_twitch(Downloader):
         url = self.url
         if 'twitch.tv' in url:
             if not url.startswith('http://') and not url.startswith('https://'):
-                url = 'https://' + url
-            self.url = url
+                url = f'https://{url}'
         else:
             url = 'https://www.twitch.tv/videos/{}'.format(url)
-            self.url = url
+
+        self.url = url
 
     @classmethod
     def fix_url(cls, url):

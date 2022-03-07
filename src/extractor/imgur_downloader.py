@@ -47,9 +47,7 @@ def get_info(url):
     url = url.replace('/gallery/', '/a/')
     if '/r/' in url and url.split('/r/')[1].strip('/').count('/') == 0:
         title = re.find(r'/r/([^/]+)', url)
-        info = {}
-        info['title'] = title
-        info['type'] = 'r'
+        info = {'title': title, 'type': 'r'}
     else:
         try: # legacy
             html = downloader.read_html(url, cookies={'over18':'1'})
@@ -81,7 +79,7 @@ def get_imgs(url, info=None, cw=None):
             imgs_ = info['media']
         else: # legacy
             imgs_ = [info]
-        
+
         for img in imgs_:
             img_url = img.get('url') # new
             if not img_url: # legacy
@@ -91,7 +89,7 @@ def get_imgs(url, info=None, cw=None):
             if img_url in imgs:
                 continue
             imgs.append(img_url)
-            
+
     elif info['type'] == 'r':
         urls = set()
         for p in range(100):
@@ -99,7 +97,7 @@ def get_imgs(url, info=None, cw=None):
             print(url_api)
             html = downloader.read_html(url_api, referer=url)
             soup = Soup(html)
-            
+
             c = 0
             for post in soup.findAll('div', class_='post'):
                 a = post.find('a', class_='image-list-link')
@@ -115,14 +113,13 @@ def get_imgs(url, info=None, cw=None):
                     print(e)
 
                 s = (u'{} {}  ({})').format(tr_(u'\uc77d\ub294 \uc911...'), info['title'], len(imgs))
-                if cw is not None:
-                    if cw.alive:
-                        cw.setTitle(s)
-                    else:
-                        return []
-                else:
+                if cw is None:
                     print(s)
-                
+
+                elif cw.alive:
+                    cw.setTitle(s)
+                else:
+                    return []
             if c == 0:
                 print('same; break')
                 break
