@@ -75,15 +75,12 @@ class Downloader_pixiv_comic(Downloader):
 
 def get_soup(url, session=None, cw=None):
     html = read_html(url, session=session, cw=cw)
-    soup = Soup(html)
-    return soup
+    return Soup(html)
 
 
 def read_html(url, session=None, cw=None):
     r = clf2.solve(url, session=session, cw=cw)
-    html = r['html']
-
-    return html
+    return r['html']
 
 
 def get_artist(soup):
@@ -92,12 +89,10 @@ def get_artist(soup):
         artist = soup.find('div', class_=lambda c: c and c.startswith('Header_author'))
     if artist:
         return artist.text.strip()
+    if artist := re.find(r'"author" *: *(".+?")', soup.html):
+        return json.loads(artist)
     else:
-        artist = re.find(r'"author" *: *(".+?")', soup.html)
-        if artist:
-            return json.loads(artist)
-        else:
-            return 'N/A'
+        return 'N/A'
 
 
 def get_pages(soup, url):
@@ -138,8 +133,7 @@ def f(url):
         raise Exception(tr_('목록 주소를 입력해주세요'))
     html = read_html(url)
     soup = Soup(html)
-    pages = get_pages(soup, url)
-    return pages
+    return get_pages(soup, url)
 
 
 def get_imgs(url, title, soup=None, session=None, cw=None):
@@ -152,8 +146,7 @@ def get_imgs(url, title, soup=None, session=None, cw=None):
     pages = page_selector.filter(pages, cw)
     imgs = []
     for i, page in enumerate(pages):
-        imgs_already = get_imgs_already('pixiv_comic', title, page, cw)
-        if imgs_already:
+        if imgs_already := get_imgs_already('pixiv_comic', title, page, cw):
             imgs += imgs_already
             continue
         if cw is not None:

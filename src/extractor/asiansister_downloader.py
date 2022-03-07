@@ -47,8 +47,7 @@ def get_imgs(url, soup=None, name=None):
 
     view = soup.findAll('div', class_='rootContant')[:2][-1]
 
-    v = view.find('video')
-    if v:
+    if v := view.find('video'):
         img = v.find('source').attrs['src']
         img =  urljoin(url, img)
         img = Image(img, url, 0, 'video')

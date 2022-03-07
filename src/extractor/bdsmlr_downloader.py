@@ -28,13 +28,11 @@ class Downloader_bdsmlr(Downloader):
     @property
     def id_(self):
         url = self.url
-        if 'bdsmlr.com' in url:
-            if 'www.bdsmlr.com' in url:
-                raise Exception('www.bdsmlr.com')
-            gal_num = url.split('.bdsmlr.com')[0].split('/')[(-1)]
-        else:
-            gal_num = url
-        return gal_num
+        if 'bdsmlr.com' not in url:
+            return url
+        if 'www.bdsmlr.com' in url:
+            raise Exception('www.bdsmlr.com')
+        return url.split('.bdsmlr.com')[0].split('/')[(-1)]
 
     def read(self):
         info = get_imgs(self.id_, session=self.session, cw=self.cw)
@@ -77,19 +75,15 @@ def foo(url, soup, info, reblog=False):
 def get_imgs(user_id, session, cw=None):
     print_ = get_print(cw)
     url = 'https://{}.bdsmlr.com/'.format(user_id)
-    info = {'c': 0, 'posts': [], 'ids': set()}
-
     html = downloader.read_html(url, session=session)
     soup = Soup(html)
 
-    sorry = soup.find('div', class_='sorry')
-    if sorry:
+    if sorry := soup.find('div', class_='sorry'):
         raise Exception(sorry.text.strip())
 
     username = soup.find('title').text.strip()###
     print('username:', username)
-    info['username'] = username
-    
+    info = {'c': 0, 'posts': [], 'ids': set(), 'username': username}
     token = soup.find('meta', {'name': 'csrf-token'}).attrs['content']
     print_(u'token: {}'.format(token))
 
@@ -130,13 +124,13 @@ def get_imgs(user_id, session, cw=None):
         n = len(info['ids'])
 
         s = u'{}  {} (tumblr_{}) - {}'.format(tr_(u'읽는 중...'), username, user_id, len(info['posts']))
-        if cw is not None:
-            if not cw.alive:
-                return
+        if cw is None:
+            print(s)
+
+        elif cw.alive:
             cw.setTitle(s)
         else:
-            print(s)
-            
+            return
         if len(info['posts']) > max_pid:
             break
 

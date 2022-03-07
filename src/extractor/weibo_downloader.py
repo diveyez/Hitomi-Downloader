@@ -107,7 +107,7 @@ def get_id(url, cw=None):
             raise
         except Exception as e:
             e_ = e
-            print(e)
+            print(e_)
     else:
         raise e_
     return uid, oid, name

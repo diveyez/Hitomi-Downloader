@@ -65,10 +65,9 @@ class Video(object):
         html = downloader.read_html(url)
         soup = Soup(html)
 
-        embedUrl = extract('embedUrl', html, cw)
-        if embedUrl:
+        if embedUrl := extract('embedUrl', html, cw):
             raise EmbedUrlError('[pandoratv] EmbedUrl: {}'.format(embedUrl))
-        
+
         uid = extract('strLocalChUserId', html, cw)
         pid = extract('nLocalPrgId', html, cw)
         fid = extract('strFid', html, cw)
@@ -98,13 +97,13 @@ class Video(object):
         self._url_video = data['src']
 
         self.title = soup.find('meta', {'property': 'og:description'})['content']
-        
+
         ext = get_ext(self._url_video)
         self.filename = format_filename(self.title, pid, ext)
 
         self.url_thumb = soup.find('meta', {'property': 'og:image'})['content']
         self.thumb = BytesIO()
         downloader.download(self.url_thumb, buffer=self.thumb)
-        
+
         return self._url_video
 

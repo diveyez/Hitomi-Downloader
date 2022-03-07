@@ -59,8 +59,7 @@ class Downloader_kakaopage(Downloader):
         
         
 def get_id(url):
-    id_ = re.find('seriesId=([0-9]+)', url, err='No seriesId')
-    return id_
+    return re.find('seriesId=([0-9]+)', url, err='No seriesId')
 
 
 
@@ -69,8 +68,8 @@ def get_pages(url, session):
 
     pages = []
     ids = set()
+    url_api = 'https://api2-page.kakao.com/api/v5/store/singles'
     for p in range(500): #2966
-        url_api = 'https://api2-page.kakao.com/api/v5/store/singles'
         data = {
             'seriesid': id_,
             'page': str(p),
@@ -137,13 +136,10 @@ def get_info(url, session, cw=None):
     if not pages:
         raise Exception('no pages')
 
-    info = {}
-    
     html = read_html(url, session=session)
     soup = Soup(html)
 
-    __NEXT_DATA__ = soup.find('script', id='__NEXT_DATA__')
-    if __NEXT_DATA__:
+    if __NEXT_DATA__ := soup.find('script', id='__NEXT_DATA__'):
         data = json.loads(__NEXT_DATA__.string)
         tid = data['props']['initialState']['common']['constant']['tid']
         print_('tid: {}'.format(tid))
@@ -157,9 +153,11 @@ def get_info(url, session, cw=None):
         while x in artist:
             artist = artist.replace(x, ',')
     artist = artist.replace(',', ', ')
-    info['artist'] = artist
-    info['title_raw'] = title
-    info['title'] = clean_title('[{}] {}'.format(artist, title))
+    info = {
+        'artist': artist,
+        'title_raw': title,
+        'title': clean_title('[{}] {}'.format(artist, title)),
+    }
 
     imgs = []
 
@@ -169,12 +167,12 @@ def get_info(url, session, cw=None):
                 return
             cw.setTitle('{} {} / {}  ({} / {})'.format(tr_('읽는 중...'), info['title'], page.title, i + 1, len(pages)))
 
-        #3463
-        imgs_already = get_imgs_already('kakaopage', info['title'], page, cw)
-        if imgs_already:
+        if imgs_already := get_imgs_already(
+            'kakaopage', info['title'], page, cw
+        ):
             imgs += imgs_already
             continue
-        
+
         try:
             _imgs = get_imgs_page(page, session)
             e_msg = None
@@ -184,7 +182,7 @@ def get_info(url, session, cw=None):
         print_('{} {}'.format(page.title, len(_imgs)))
         if e_msg:
             print_(e_msg)
-        
+
         imgs += _imgs
         sleep(.2)
 
@@ -201,5 +199,4 @@ def get_info(url, session, cw=None):
 def f(url):
     if 'seriesId=' not in url:
         raise Exception(tr_('목록 주소를 입력해주세요'))
-    pages = get_pages(url, Session())
-    return pages
+    return get_pages(url, Session())

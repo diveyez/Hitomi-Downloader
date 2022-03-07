@@ -19,10 +19,7 @@ class Downloader_tokyomotion(Downloader):
     def init(self):
         html = downloader.read_html(self.url)
         self.soup = Soup(html)
-        if '/album/' in self.url:
-            self._type = 'album'
-        else:
-            self._type = 'video'
+        self._type = 'album' if '/album/' in self.url else 'video'
 
     @property
     def name(self):
@@ -56,11 +53,11 @@ class Video(object):
 
 def get_title(soup):
     video = soup.find('video', id='vjsplayer')
-    if video:
-        title = soup.find('h3').text.strip()
-    else:
-        title = soup.find('title').text.split(' Album - ')[0].strip()
-    return title
+    return (
+        soup.find('h3').text.strip()
+        if video
+        else soup.find('title').text.split(' Album - ')[0].strip()
+    )
 
 
 def get_video(url, soup=None):

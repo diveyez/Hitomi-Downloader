@@ -125,9 +125,7 @@ def get_video(session, url, format, cw=None):
         #info = nndownload.request_nama(session, id)
     else:
         info = nndownload.request_video(session, id)
-    video = Video(session, info, format, cw)
-
-    return video
+    return Video(session, info, format, cw)
 
 
 import selector

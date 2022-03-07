@@ -220,8 +220,7 @@ def get_imgs_all(url, title, cw=None):
     pages = page_selector.filter(pages, cw)
     imgs = []
     for p, page in enumerate(pages):
-        imgs_already = get_imgs_already('navertoon', title, page, cw)
-        if imgs_already:
+        if imgs_already := get_imgs_already('navertoon', title, page, cw):
             imgs += imgs_already
             continue
         imgs_new = get_imgs(page, cw)

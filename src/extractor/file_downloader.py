@@ -15,7 +15,7 @@ class Downloader_file(Downloader):
     def fix_url(cls, url):
         if '://' not in url:
             url = 'https://' + url.lstrip('/')
-        return 'file_' + url
+        return f'file_{url}'
 
     def read(self):
         qs = query_url(self.url)

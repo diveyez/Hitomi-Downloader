@@ -98,8 +98,7 @@ class Downloader_jmana(Downloader):
 
 
 def get_title(soup):
-    a = soup.find('a', class_='tit')
-    if a:
+    if a := soup.find('a', class_='tit'):
         return a.text.strip()
     return re.find(r'제목 *: *(.+)', soup.find('a', class_='tit').text, err='no title')
 
@@ -117,16 +116,16 @@ def get_imgs_page(page, referer, session, cw=None):
     inserted = re.find(r'''var *inserted *= *['"](.*?)['"]''', html)
     print_('inserted: {}'.format(inserted))
 
-    inserted = set(int(i) for i in inserted.split(',')) if inserted else set()
-    
+    inserted = {int(i) for i in inserted.split(',')} if inserted else set()
+
     soup = Soup(html)
 
     view = soup.find(class_='pdf-wrap')
-    
+
     imgs = []
     for i, img in enumerate(child for child in view.children if isinstance(child, bs4.element.Tag)):
         src = img.get('data-src') or img.get('src') or ''
-        
+
         if i in inserted:
             print_('remove: {}'.format(src))
             continue
@@ -140,7 +139,7 @@ def get_imgs_page(page, referer, session, cw=None):
         if '/notice' in src:
             print('notice:', src)
             continue
-        
+
         img = Image(src, page, len(imgs))
         imgs.append(img)
 
@@ -177,8 +176,7 @@ def f(url):
     if re.search(PATTERN_ID, url):
         raise Exception(tr_(u'목록 주소를 입력해주세요'))
     session = Session()
-    pages = get_pages(url, session=session)
-    return pages
+    return get_pages(url, session=session)
 
 
 def get_imgs(url, title, session, soup=None, cw=None):
@@ -191,11 +189,10 @@ def get_imgs(url, title, session, soup=None, cw=None):
     pages = page_selector.filter(pages, cw)
     imgs = []
     for i, page in enumerate(pages):
-        imgs_already = get_imgs_already('jmana', title, page, cw)
-        if imgs_already:
+        if imgs_already := get_imgs_already('jmana', title, page, cw):
             imgs += imgs_already
             continue
-        
+
         imgs += get_imgs_page(page, url, session, cw)
         if cw is not None:
             if not cw.alive:

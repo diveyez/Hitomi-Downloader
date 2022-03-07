@@ -67,9 +67,7 @@ class Downloader_novelpia(Downloader):
         self.filenames[f] = clean_title(f"{ep_num.text}: {ep_name.text}.txt", "safe")
 
         # https://novelpia.com/viewer/:number:
-        numbers: List[str] = []
-        numbers.append(self.__get_number(self.parsed_url[2]))
-
+        numbers: List[str] = [self.__get_number(self.parsed_url[2])]
         # Get real contents
         # https://novelpia.com/proc/viewer_data/:number:
         # {"s": [{"text": ""}]}
@@ -78,22 +76,21 @@ class Downloader_novelpia(Downloader):
         )
         for viewer_data in viewer_datas:
             response = session.get(viewer_data)
-            if response.text:
-                response = response.json()
-                for text_dict in response["s"]:
-                    text = text_dict["text"]
-                    if "img" in text:
-                        soup = Soup(text)
-                        img = soup.find("img")
-                        # Maybe NavigableString here too?
-                        assert isinstance(img, Tag)
-                        src = img.attrs["src"]
-                        filename = img.attrs["data-filename"]
-                        f.write(f"[{filename}]".encode("UTF-8"))
-                        self.urls.append(f"https:{src}")
-                    else:
-                        f.write(text_dict["text"].encode("UTF-8"))
-                f.seek(0)
-                self.urls.append(f)
-            else:
+            if not response.text:
                 raise LoginRequired
+            response = response.json()
+            for text_dict in response["s"]:
+                text = text_dict["text"]
+                if "img" in text:
+                    soup = Soup(text)
+                    img = soup.find("img")
+                    # Maybe NavigableString here too?
+                    assert isinstance(img, Tag)
+                    src = img.attrs["src"]
+                    filename = img.attrs["data-filename"]
+                    f.write(f"[{filename}]".encode("UTF-8"))
+                    self.urls.append(f"https:{src}")
+                else:
+                    f.write(text.encode("UTF-8"))
+            f.seek(0)
+            self.urls.append(f)

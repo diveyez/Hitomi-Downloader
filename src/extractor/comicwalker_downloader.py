@@ -15,10 +15,9 @@ import os
 def decode(s, hash):
     # generateKey
     key = int(hash[:16], 16)
-    
+
     filter = [int((key>>i*8)%256) for i in range(8)][::-1] # 
-    s2 = bytes(x^y for x, y in zip(s, cycle(filter)))
-    return s2
+    return bytes(x^y for x, y in zip(s, cycle(filter)))
 
 
 class Image(object):
@@ -127,8 +126,7 @@ def get_title(soup, cw=None):
 def f(url):
     if '/viewer/' in url:
         raise Exception(tr_(u'목록 주소를 입력해주세요'))
-    pages = get_pages(url)
-    return pages
+    return get_pages(url)
 
 
 def get_imgs(url, soup=None, cw=None):
@@ -143,16 +141,15 @@ def get_imgs(url, soup=None, cw=None):
 
     imgs = []
     for i, page in enumerate(pages):
-        imgs_already = get_imgs_already('comicwalker', title, page, cw)
-        if imgs_already:
+        if imgs_already := get_imgs_already('comicwalker', title, page, cw):
             imgs += imgs_already
             continue
-        
+
         if cw is not None:
             if not cw.alive:
                 return
             cw.setTitle(u'{} {} / {}  ({} / {})'.format(tr_(u'읽는 중...'), title, page.title, i+1, len(pages)))
-        
+
         imgs += get_imgs_page(page)
 
     return imgs

@@ -37,9 +37,7 @@ class Downloader_likee(Downloader):
 def get_info(url, session, cw=None):
     print_ = get_print(cw)
 
-    info = {}
-    info['videos'] = []
-    
+    info = {'videos': []}
     if '/video/' in url:
         info['type'] = 'single'
         video = Video(url, session)
@@ -60,15 +58,15 @@ def get_info(url, session, cw=None):
 
     lastPostId = ''
     urls = set()
+    url_api = 'https://likee.video/official_website/VideoApi/getUserVideo'
     while True:
-        url_api = 'https://likee.video/official_website/VideoApi/getUserVideo'
         r = session.post(url_api, data={'uid': info['uid'], 'count': '30', 'lastPostId': lastPostId})
         data = json.loads(r.text)
 
         videos = data['data']['videoList']
         if not videos:
             break
-        
+
         for data in videos:
             url_post = 'https://likee.video/@{}/video/{}'.format(data['likeeId'], data['postId'])
             if url_post in urls:
@@ -87,7 +85,7 @@ def get_info(url, session, cw=None):
             cw.setTitle(msg)
         else:
             print(msg)
-            
+
     return info
 
 

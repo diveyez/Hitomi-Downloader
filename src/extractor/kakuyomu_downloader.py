@@ -76,15 +76,16 @@ def get_text(page):
     soup = Soup(html)
     view = soup.find('div', class_='widget-episodeBody')
     story = view.text.strip()
-    text =u'''────────────────────────────────
+    return u'''────────────────────────────────
 
   ◆  {}        {}
 
 ────────────────────────────────
 
 
-{}'''.format(page.title, page.date, story)
-    return text
+{}'''.format(
+        page.title, page.date, story
+    )
         
 
 def get_info(url, soup=None):
@@ -92,21 +93,21 @@ def get_info(url, soup=None):
         html = downloader.read_html(url)
         soup = Soup(html)
 
-    info = {}
+    info = {'title': soup.find('h1', id='workTitle').text.strip()}
 
-    info['title'] = soup.find('h1', id='workTitle').text.strip()
     info['artist'] = soup.find('span', id='workAuthor-activityName').text.strip()
 
     desc = soup.find('section', id='description')
-    button = desc.find('span', class_='ui-truncateTextButton-expandButton')
-    if button:
+    if button := desc.find(
+        'span', class_='ui-truncateTextButton-expandButton'
+    ):
         print('decompose button')
         button.decompose()
     catch = desc.find('span', id='catchphrase-body').text.strip()
     intro = desc.find('p', id='introduction').text.strip()
     desc = u'  {}\n\n\n{}'.format(catch, intro)
     info['description'] = desc
-    
+
     pages = []
     for a in soup.findAll('a', class_='widget-toc-episode-episodeTitle'):
         href = urljoin(url, a.attrs['href'])

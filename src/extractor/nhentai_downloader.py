@@ -91,7 +91,7 @@ def get_info(id):
     data = html.split('JSON.parse(')[1].split(');')[0]
     gal = json.loads(json.loads(data))
     host = 'https://i.nhentai.net'#re.find('''media_url: *['"]([^'"]+)''', html, err='no host')
-    
+
     id = int(gal['id'])
     id_media = int(gal['media_id'])
     title = gal['title']['english']
@@ -116,8 +116,19 @@ def get_info(id):
         type = img['t']
         format = {'j':'jpg', 'p':'png', 'g':'gif'}[type]
         formats.append(format)
-    info = Info(host, id, id_media, title, p, artists, groups, seriess, lang, type_, formats)
-    return info
+    return Info(
+        host,
+        id,
+        id_media,
+        title,
+        p,
+        artists,
+        groups,
+        seriess,
+        lang,
+        type_,
+        formats,
+    )
 
 
 def get_imgs(id):

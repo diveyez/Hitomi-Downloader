@@ -16,9 +16,7 @@ def get_name(soup):
 
 
 def isLogin(soup):
-    if soup.find('ul', id="sub-menu"):
-        return True
-    return False
+    return bool(soup.find('ul', id="sub-menu"))
 
 
 @Downloader.register
@@ -138,11 +136,7 @@ def get_imgs(url, title=None, cw=None):
             url_imgs.add(url_img)
             id = int(re.find('[?&]id=([0-9]+)', url_img))
             multi = post.find('div', class_='thumbnail-icon')
-            if multi:
-                imgs_ = get_imgs_post(id, url_img)#
-            else:
-                imgs_ = [Image(id, url_img, 0)]
-            
+            imgs_ = get_imgs_post(id, url_img) if multi else [Image(id, url_img, 0)]
             imgs += imgs_
             c += 1
 

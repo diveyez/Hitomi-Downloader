@@ -147,9 +147,7 @@ class PinterestAPI:
     def _pagination(self, resource, options):
         while True:
             data = self._call(resource, options)
-            for x in data['resource_response']['data']:
-                yield x
-
+            yield from data['resource_response']['data']
             try:
                 bookmarks = data['resource']['options']['bookmarks']
                 if not bookmarks or bookmarks[0] == '-end-' or bookmarks[0].startswith('Y2JOb25lO'):

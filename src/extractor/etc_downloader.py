@@ -184,11 +184,7 @@ class Video(object):
 
         if not ext:
             print('empty ext')
-            if f['_resolution']:
-                ext = '.mp4'
-            else:
-                ext = '.mp3'
-
+            ext = '.mp4' if f['_resolution'] else '.mp3'
         if ext.lower() == '.m3u8':
             try:
                 url = playlist2stream(self.url, referer, session=session, n_thread=4)

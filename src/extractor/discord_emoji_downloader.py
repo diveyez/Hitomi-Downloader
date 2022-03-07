@@ -59,11 +59,10 @@ class DownloaderDiscordEmoji(Downloader):
                     )  # 메세지 박스 return하니까 멈춰서 raise로 해놨어요
                 else:
                     raise errors.Invalid("이메일 또는 비밀번호가 잘못되었습니다. 확인후 다시 시도해주세요.")
+            elif account_info["token"]:
+                token = account_info["token"]
             else:
-                if not account_info["token"]:
-                    raise errors.Invalid("토큰을 받아오지 못했어요. 2단계인증을 사용중이신경우 토큰을 이용해 요청해주세요.")
-                else:
-                    token = account_info["token"]
+                raise errors.Invalid("토큰을 받아오지 못했어요. 2단계인증을 사용중이신경우 토큰을 이용해 요청해주세요.")
         else:
             raise errors.Invalid("인자값이 더 많이왔어요.")
 
@@ -74,20 +73,20 @@ class DownloaderDiscordEmoji(Downloader):
         else:
             guild_info = guild_info_response.json()
 
-        if guild_info["emojis"]:
-            base_url = "https://cdn.discordapp.com/emojis/"
-            for emoji in guild_info["emojis"]:  # 이모지 리스트로 가져옴
-                if emoji["animated"] is True:  # 만약 gif면 gif 다운로드
-                    param = emoji["id"] + ".gif"
-                else:  # 아닐경우 png로
-                    param = emoji["id"] + ".png"
-
-                self.title = clean_title(
-                    f'{guild_info["name"]}({guild_info["id"]})'  # 폴더 이름은 서버 이름, id
-                )
-                self.urls.append(base_url + param + "?v=1")  # 인자 합치기
-        else:
+        if not guild_info["emojis"]:
             raise errors.Invalid("해당 서버에는 이모지가 없어요")
+        base_url = "https://cdn.discordapp.com/emojis/"
+        for emoji in guild_info["emojis"]:  # 이모지 리스트로 가져옴
+            param = (
+                emoji["id"] + ".gif"
+                if emoji["animated"] is True
+                else emoji["id"] + ".png"
+            )
+
+            self.title = clean_title(
+                f'{guild_info["name"]}({guild_info["id"]})'  # 폴더 이름은 서버 이름, id
+            )
+            self.urls.append(base_url + param + "?v=1")  # 인자 합치기
 
     def get_emoji_list(self, token: str, guild_id: int) -> dict:
         response = requests.get(
@@ -103,7 +102,7 @@ class DownloaderDiscordEmoji(Downloader):
         return response
 
     def post_account_info(self, email: str, password: str) -> dict:
-        response = requests.post(
+        return requests.post(
             "https://discordapp.com/api/v8/auth/login",
             json={
                 "email": email,
@@ -114,5 +113,3 @@ class DownloaderDiscordEmoji(Downloader):
                 "gift_code_sku_id": None,
             },
         )
-
-        return response

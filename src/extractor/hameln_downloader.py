@@ -26,8 +26,7 @@ class Downloader_hameln(Downloader):
     @lazy
     def soup(self):
         html = read_html(self.url)
-        soup = Soup(html)
-        return soup
+        return Soup(html)
 
     @lazy
     def info(self):
@@ -85,8 +84,11 @@ def read_html(url):
 
 
 def get_sss(soup):
-    sss = [ss for ss in soup.findAll('div', class_='ss') if ss.attrs.get('id')!='fmenu']
-    return sss
+    return [
+        ss
+        for ss in soup.findAll('div', class_='ss')
+        if ss.attrs.get('id') != 'fmenu'
+    ]
 
 
 def get_pages(url, soup=None):
@@ -145,8 +147,7 @@ def get_info(url, soup=None):
         html = read_html(url)
         soup = Soup(html)
 
-    info = {}
-    info['artist'] = soup.find('span', {'itemprop':'author'}).text.strip()
+    info = {'artist': soup.find('span', {'itemprop':'author'}).text.strip()}
     info['title'] = soup.find('span', {'itemprop':'name'}).text.strip()
     sss = get_sss(soup)
     info['novel_ex'] = get_text(sss[-2], '')

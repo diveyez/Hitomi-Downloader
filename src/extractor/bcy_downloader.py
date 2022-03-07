@@ -22,11 +22,13 @@ class Downloader_bcy(Downloader):
     @property
     def name(self):
         info = self.info
-        if '/detail/' in self.url:
-            title = u'{} (bcy_{}) - {}'.format(clean_title(info['artist']), info['uid'], info['id'])
-        else:
-            title = u'{} (bcy_{})'.format(clean_title(info['artist']), info['uid'])
-        return title
+        return (
+            u'{} (bcy_{}) - {}'.format(
+                clean_title(info['artist']), info['uid'], info['id']
+            )
+            if '/detail/' in self.url
+            else u'{} (bcy_{})'.format(clean_title(info['artist']), info['uid'])
+        )
 
     def read(self):
         imgs = get_imgs(self.url, self.html, cw=self.cw)
@@ -41,8 +43,7 @@ class Downloader_bcy(Downloader):
 def get_ssr_data(html):
     s = html.split('window.__ssr_data = JSON.parse("')[1].replace('\\"', '"')
     s = cut_pair(s).replace('"', '\\"')
-    data = json.loads(json.loads('"{}"'.format(s)))
-    return data
+    return json.loads(json.loads('"{}"'.format(s)))
 
 
 @try_n(2)
@@ -102,14 +103,11 @@ def get_ext(url, referer=None):
 
 def get_info(url, html):
     soup = Soup(html)
-    info = {}
-
     uname = soup.find('div', class_='user-name') or soup.find('p', class_='uname') or soup.find('div', class_='user-info-name')
 
-    info['artist'] = uname.text.strip()
-
+    info = {'artist': uname.text.strip()}
     j = get_ssr_data(html)
-    
+
     if '/detail/' in url:
         info['uid'] = j['detail']['detail_user']['uid']
         info['id'] = j['detail']['post_data']['item_id']

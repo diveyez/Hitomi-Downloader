@@ -36,9 +36,7 @@ class Downloader_manatoki(Downloader):
         self.session, self.soup, url = get_soup(self.url)
         self.url = self.fix_url(url)
 
-        # 2377
-        list = self.soup.find(attrs={'data-original-title': '목록'})
-        if list:
+        if list := self.soup.find(attrs={'data-original-title': '목록'}):
             url = urljoin(self.url, list.parent['href'])
             nav = self.soup.find('div', class_='toon-nav')
             select = nav.find('select', {'name': 'wr_id'})
@@ -49,7 +47,7 @@ class Downloader_manatoki(Downloader):
                 raise Exception('no selected option')
             self.session, self.soup, url = get_soup(url)
             url_page = self.fix_url(url)
-            
+
             for i, page in enumerate(get_pages(url_page, self.soup)):
                 if page.id == int(op['value']):
                     break
@@ -62,9 +60,9 @@ class Downloader_manatoki(Downloader):
 
     @classmethod
     def fix_url(cls, url):
-        # 2377
-        m = re.find(r'/board.php\?bo_table=([0-9a-zA-Z_]+)&wr_id=([0-9]+)', url)
-        if m:
+        if m := re.find(
+            r'/board.php\?bo_table=([0-9a-zA-Z_]+)&wr_id=([0-9]+)', url
+        ):
             return urljoin(url, '/{}/{}'.format(*m))
         return url.split('?')[0]
 
@@ -97,8 +95,7 @@ class Downloader_manatoki(Downloader):
 def get_artist(soup):
     view = soup.find('div', class_='view-title')
     text = view.text.replace('\n', '#')
-    artist = re.find(r'작가[ #]*:[ #]*(.+?)#', text, default='N/A').strip()
-    return artist
+    return re.find(r'작가[ #]*:[ #]*(.+?)#', text, default='N/A').strip()
 
 
 @sleep_and_retry
@@ -136,13 +133,12 @@ def f(url):
     list = soup.find('ul', class_='list-body')
     if list is None:
         raise Exception(tr_('목록 주소를 입력해주세요'))
-    pages = get_pages(url, soup)
-    return pages
+    return get_pages(url, soup)
 
 
 def get_imgs(url, title, soup=None, session=None, cw=None):
     print_ = get_print(cw)
-    
+
     if soup is None or session is None:
         session, soup, url = get_soup(url, session)
 
@@ -151,23 +147,22 @@ def get_imgs(url, title, soup=None, session=None, cw=None):
 
     imgs = []
     for i, page in enumerate(pages):
-        imgs_already = get_imgs_already('manatoki', title, page, cw)
-        if imgs_already:
+        if imgs_already := get_imgs_already('manatoki', title, page, cw):
             imgs += imgs_already
             continue
-        
+
         imgs_ = get_imgs_page(page, title, url, session, cw)
         imgs += imgs_
 
         s = '{} {} / {}  ({} / {})'.format(tr_('읽는 중...'), title, page.title, i+1, len(pages))
         print_('{} {}'.format(page.title, len(imgs_)))
-        if cw is not None:
-            if not cw.alive:
-                return
-            cw.setTitle(s)
-        else:
+        if cw is None:
             print('read page... {}    ({})'.format(page.url, len(imgs)))
 
+        elif cw.alive:
+            cw.setTitle(s)
+        else:
+            return
     return imgs
 
 

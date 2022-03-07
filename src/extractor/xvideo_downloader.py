@@ -61,14 +61,10 @@ class Downloader_xvideo(Downloader):
 
     @classmethod
     def key_id(cls, url):
-        res = re.find(CHANNEL_PATTERN, url)
-        if res:
-            return '_'.join(res)
-        return url
+        return '_'.join(res) if (res := re.find(CHANNEL_PATTERN, url)) else url
 
     def read(self):
-        res = re.find(CHANNEL_PATTERN, self.url)
-        if res:
+        if res := re.find(CHANNEL_PATTERN, self.url):
             header, username = res
             info = read_channel(self.url, self.cw)
             videos = [Video(url) for url in info['urls']]
@@ -77,7 +73,7 @@ class Downloader_xvideo(Downloader):
             video = Video(self.url)
             video.url()
             self.title = video.title
-            
+
         self.setIcon(video.thumb)
         self.urls.append(video.url)
 
@@ -90,9 +86,7 @@ def read_channel(url_page, cw=None):
     header, username = res
     print(header, username)
     max_pid = get_max_range(cw)
-    info = {}
-    info['header'] = header
-    info['username'] = username
+    info = {'header': header, 'username': username}
     session = Session()
     urls = []
     urls_set = set()
@@ -114,10 +108,10 @@ def read_channel(url_page, cw=None):
                 continue
             urls_set.add(href)
             urls.append(href)
-        
+
         if len(urls) >= max_pid:
             break
-        
+
         s = '{} {} - {}'.format(tr_('읽는 중...'), info['name'], len(urls))
         if cw:
             if not cw.alive:

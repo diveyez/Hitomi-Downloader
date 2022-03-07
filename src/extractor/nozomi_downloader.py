@@ -59,15 +59,16 @@ class Downloader_nozomi(Downloader):
 def get_ids(q, popular, cw):
     check_alive(cw)
     if q is None:
-        if popular:
-            url_api = 'https://j.nozomi.la/index-Popular.nozomi'
-        else:
-            url_api = 'https://j.nozomi.la/index.nozomi'
+        url_api = (
+            'https://j.nozomi.la/index-Popular.nozomi'
+            if popular
+            else 'https://j.nozomi.la/index.nozomi'
+        )
+
+    elif popular:
+        url_api = 'https://j.nozomi.la/nozomi/popular/{}-Popular.nozomi'.format(quote(q))
     else:
-        if popular:
-            url_api = 'https://j.nozomi.la/nozomi/popular/{}-Popular.nozomi'.format(quote(q))
-        else:
-            url_api = 'https://j.nozomi.la/nozomi/{}.nozomi'.format(quote(q))
+        url_api = 'https://j.nozomi.la/nozomi/{}.nozomi'.format(quote(q))
     print(url_api)
     f = BytesIO()
     downloader.download(url_api, referer='https://nozomi.la/', buffer=f)
@@ -95,10 +96,7 @@ def get_ids_multi(q, popular, cw=None):
         ids_ = get_ids(q, popular, cw)
         set_ids_ = set(ids_)
         ids_old = ids
-        ids = []
-        for id in ids_old:
-            if id in set_ids_:
-                ids.append(id)
+        ids = [id for id in ids_old if id in set_ids_]
         print_('{}: {} ({})'.format(q, len(ids_), len(ids)))
 
     # Negative
@@ -106,9 +104,6 @@ def get_ids_multi(q, popular, cw=None):
         ids_ = get_ids(q, popular, cw)
         set_ids_ = set(ids_)
         ids_old = ids
-        ids = []
-        for id in ids_old:
-            if id not in set_ids_:
-                ids.append(id)
+        ids = [id for id in ids_old if id not in set_ids_]
         print_('-{}: {} ({})'.format(q, len(ids_), len(ids)))
     return ids[:max_pid]

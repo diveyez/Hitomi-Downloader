@@ -86,5 +86,4 @@ def get_video(url, session, cw):
         streams[0] += stream
     stream = streams[0]
     id = url.split('/')[(-1)].split('?')[0].split('#')[0]
-    video = Video(stream, url, id, title, url_thumb)
-    return video
+    return Video(stream, url, id, title, url_thumb)

@@ -261,12 +261,12 @@ def get_info(url, cw=None, depth=0, tags_add=None):
     api = PixivAPI()
     info = {}
     imgs = []
-    
+
     ugoira_ext = [None, '.gif', '.webp', '.png'][utils.ui_setting.ugoira_convert.currentIndex()] if utils.ui_setting else None
     format_ = compatstr(utils.ui_setting.pixivFormat.currentText()) if utils.ui_setting else 'id_ppage'
-            
+
     max_pid = get_max_range(cw)
-    
+
     if api.illust_id(url): # Single post
         id_ = api.illust_id(url)
         data = api.illust(id_)
@@ -280,8 +280,8 @@ def get_info(url, cw=None, depth=0, tags_add=None):
         info['raw_title'] = data['illustTitle']
         info['title'] = '{} (pixiv_illust_{})'.format(info['raw_title'], id_)
         info['create_date'] = parse_time(data['createDate'])
-        tags_illust = set(tag['tag'] for tag in data['tags']['tags'])
-        
+        tags_illust = {tag['tag'] for tag in data['tags']['tags']}
+
         if tags_matched(tags_illust, tags_add, cw):
             if data['illustType'] == 2: # ugoira
                 data = api.ugoira_meta(id_)
@@ -302,10 +302,7 @@ def get_info(url, cw=None, depth=0, tags_add=None):
         id_ = api.user_id(url)
         if id_ is None: #
             id_ = my_id()
-        if id_ == my_id():
-            rests = ['show', 'hide']
-        else:
-            rests = ['show']
+        rests = ['show', 'hide'] if id_ == my_id() else ['show']
         process_user(id_, info, api)
         info['title'] = '{} (pixiv_bmk_{})'.format(info['artist'], info['artist_id'])
         ids = []
@@ -397,22 +394,20 @@ def get_info(url, cw=None, depth=0, tags_add=None):
         process_ids(ids, info, imgs, cw, depth)
     elif api.user_id(url): # User illusts
         m = re.search(r'/users/[0-9]+/([\w]+)/?([^\?#/]*)', url)
-        type_ = {'illustrations': 'illusts', 'manga': 'manga'}.get(m and m.groups()[0])
-        if type_:
+        if type_ := {'illustrations': 'illusts', 'manga': 'manga'}.get(
+            m and m.groups()[0]
+        ):
             types = [type_]
         else:
             types = ['illusts', 'manga']
-        if m:
-            tag = unquote(m.groups()[1]) or None
-        else:
-            tag = None
+        tag = unquote(m.groups()[1]) or None if m else None
         print_('types: {}, tag: {}'.format(types, tag))
-        
+
         id_ = api.user_id(url)
         process_user(id_, info, api)
         data = api.profile(id_)
         info['title'] = '{} (pixiv_{})'.format(info['artist'], info['artist_id'])
-        
+
         ids = []
         for type_ in types:
             illusts = data[type_]

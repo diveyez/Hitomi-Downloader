@@ -362,7 +362,7 @@ class Downloader_youtube(Downloader):
                 break
             except Exception as e:
                 e_ = e
-                self.print_(print_error(e)[0])
+                self.print_(print_error(e_)[0])
                 videos.remove(video)
         else:
             raise e_
@@ -374,7 +374,7 @@ class Downloader_youtube(Downloader):
             self.title = video.title
             if video.stream.live:
                 self.lock = False
-            
+
         self.artist = video.username
         self.setIcon(video.thumb)
 
@@ -455,8 +455,7 @@ import selector
 def select():
     if utils.ui_setting.askYoutube.isChecked():
         value = utils.messageBox(tr_('Youtube format?'), icon=utils.QMessageBox.Question, buttons=[tr_('MP4 (동영상)'), tr_('MP3 (음원)')])
-        format = ['mp4', 'mp3'][value]
-        return format
+        return ['mp4', 'mp3'][value]
 
 
 @selector.options('youtube')

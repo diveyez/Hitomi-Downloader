@@ -70,23 +70,21 @@ def get_info(url, soup=None):
         html = downloader.read_html(url)
         soup = Soup(html)
 
-    info = {}
-    
-    info['id'] = get_id(url)
-        
+    info = {'id': get_id(url)}
+
     title = soup.find('h1').text.strip()
     info['title'] = title
 
     for tag in soup.findAll('span', class_='tag'):
         href = tag.parent.attrs['href']
         href = urljoin(url, href).strip('/')
-        
+
         key = href.split('/')[3]
         value = href.split('/')[-1]
-        
+
         if key == 'language' and value == 'translated':
             continue
-        
+
         if key in info:
             info[key].append(value)
         else:
@@ -95,6 +93,6 @@ def get_info(url, soup=None):
     for key in ['artists', 'groups', 'parodies', 'tags', 'characters']:
         if key not in info:
             info[key] = []
-    
+
     return info
         

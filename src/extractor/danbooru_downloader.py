@@ -68,8 +68,7 @@ class Image(object):
 
     def get(self, url):
         soup = read_soup(url, self._cw)
-        ori = soup.find('li', id='post-option-view-original')
-        if ori:
+        if ori := soup.find('li', id='post-option-view-original'):
             img = ori.find('a')['href']
         else:
             img = soup.find('li', id='post-info-size').find('a')['href']
